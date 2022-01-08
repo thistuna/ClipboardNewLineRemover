@@ -26,12 +26,26 @@ namespace ClipboardNewLineRemover
         [DllImport("user32.dll", SetLastError = true)]
         private extern static void RemoveClipboardFormatListener(IntPtr hwnd);
 
-        private void Form1_Load(object sender, EventArgs e)
+        private bool isListenerAdded = false;
+        private void ClipboardFormatListenerEnable(bool enable)
         {
-            AddClipboardFormatListener(Handle);
+            if(enable && !isListenerAdded)
+            {
+                AddClipboardFormatListener(Handle);
+                isListenerAdded = true;
+            }
+            else if(!enable && isListenerAdded)
+            {
+                RemoveClipboardFormatListener(Handle);
+                isListenerAdded = false;
+            }
         }
 
-        
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            setFunctionEnable(true);
+        }
+
         void OnClipboardUpdate()
         {
             // クリップボードのデータが変更された
@@ -53,9 +67,9 @@ namespace ClipboardNewLineRemover
                     }
                     input = replaced;
                 }
-                RemoveClipboardFormatListener(Handle);
+                ClipboardFormatListenerEnable(false);
                 Clipboard.SetText(input);
-                AddClipboardFormatListener(Handle);
+                ClipboardFormatListenerEnable(true);
             }
         }
 
@@ -74,7 +88,33 @@ namespace ClipboardNewLineRemover
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            RemoveClipboardFormatListener(Handle);
+            ClipboardFormatListenerEnable(false);
+        }
+
+        private void setFunctionEnable(bool enable)
+        {
+            if (enable)
+            {
+                buttonOn.Enabled = false;
+                buttonOff.Enabled = true;
+                ClipboardFormatListenerEnable(true);
+            }
+            else
+            {
+                buttonOn.Enabled = true;
+                buttonOff.Enabled = false;
+                ClipboardFormatListenerEnable(false);
+            }
+        }
+
+        private void buttonOn_Click(object sender, EventArgs e)
+        {
+            setFunctionEnable(true);
+        }
+
+        private void buttonOff_Click(object sender, EventArgs e)
+        {
+            setFunctionEnable(false);
         }
     }
 }
